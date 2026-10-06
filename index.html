@@ -74,6 +74,10 @@
 #vk label.vk-lbl{display:block;font-weight:600;font-size:16px}
 #vk button.vk-abort{background:transparent;border:0;color:var(--muted);text-decoration:underline;font-weight:600;font-size:15px;padding:14px 8px;min-height:52px}
 #vk a{color:var(--fire);font-weight:600}
+#vk ol.vk-pts{list-style:none;counter-reset:vkp;margin:0 0 20px;padding:0}
+#vk ol.vk-pts li{counter-increment:vkp;position:relative;padding:14px 0 14px 46px;border-top:1px solid rgba(136,136,136,.35);font-size:16px;line-height:1.55}
+#vk ol.vk-pts li::before{content:counter(vkp);position:absolute;left:0;top:14px;width:30px;height:30px;border-radius:50%;background:var(--fire);color:#000;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+#vk ol.vk-pts b{display:block;color:var(--fire);font-size:17px;margin-bottom:2px}
 #vk .vk-org{border-top:1px solid rgba(136,136,136,.35);margin-top:30px;padding-top:18px}
 @media(prefers-reduced-motion:reduce){#vk .vk-bar i{transition:none}}
 </style>
@@ -132,7 +136,7 @@
     return {id:id, type:'scale', label:label||'Kuinka kiinnostava t\u00e4m\u00e4 on sinulle?', left:'Ei lainkaan kiinnostava', right:'Eritt\u00e4in kiinnostava'};
   }
   function priceQ(id, opts, help, label){
-    return {id:id, type:'single', label:label||'Mik\u00e4 on korkein hinta, jolla ostaisit t\u00e4m\u00e4n?', help:help, options:opts};
+    return {id:id, type:'single', label:label||'Mik\u00e4 on korkein hinta, jonka olisit valmis maksamaan t\u00e4st\u00e4?', help:help, options:opts};
   }
 
   var STEPS = [
@@ -146,7 +150,7 @@
         {v:'vuokralainen', t:'Vuokralainen', g:1},{v:'osakas', t:'Osakas', g:1},{v:'hallitus_jasen', t:'Hallituksen j\u00e4sen'},{v:'hallitus_pj', t:'Hallituksen puheenjohtaja'},{v:'isannoitsija', t:'Is\u00e4nn\u00f6itsij\u00e4'}]}
     ]},
     {id:'nyt', title:'Varautuminen nyt', qs:[
-      {id:'lahteet', type:'multi', label:'Mist\u00e4 olet saanut tietoa varautumisesta sek\u00e4 kriisitilanteista?', help:'Valitse kaikki sopivat.', options:[
+      {id:'lahteet', type:'multi', label:'Mist\u00e4 olet saanut tietoa varautumisesta ja kriisitilanteista?', help:'Valitse kaikki sopivat.', options:[
         {v:'viranomaiset', t:'Viranomaisten sivut ja pdf-oppaat'},{v:'uutiset', t:'Uutiset'},{v:'some', t:'Sosiaalinen media'},{v:'tuttavat', t:'Tutut ja naapurit'},{v:'tyopaikka', t:'Ty\u00f6paikka tai oppilaitos'},{v:'muualta', t:'Jostain muualta'},{v:'ei', t:'En ole saanut tietoa', x:true}]},
       {id:'toiminta', type:'single', label:'Oletko toiminut saadun tiedon pohjalta?', options:[
         {v:'tehnyt', t:'Olen hankkinut tai j\u00e4rjest\u00e4nyt jotain konkreettista, kuten kotivaran'},{v:'lukenut', t:'Olen lukenut, mutta en ole tehnyt mit\u00e4\u00e4n'},{v:'ei_lukenut', t:'En ole lukenut tai seurannut asiaa'}]},
@@ -154,32 +158,34 @@
         {v:'kylla', t:'Kyll\u00e4, varani riitt\u00e4v\u00e4t'},{v:'osittain', t:'Osittain'},{v:'ei', t:'Ei'},{v:'eitiedossa', t:'En osaa sanoa'}]}
     ]},
     {id:'sanat', title:'Mik\u00e4 sinua kiinnostaa?', qs:[
-      {id:'sanat', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa ajatuksen liittyen varautumiseen tai kriisitilanteeseen.', options:WORDS1.map(function(w){return {v:w,t:w};})}
+      {id:'sanat', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen varautumiseen tai kriisitilanteeseen.', options:WORDS1.map(function(w){return {v:w,t:w};})}
     ]},
     {id:'sanat2', title:'Asuminen ja kriisitilanne', qs:[
-      {id:'sanat_asuminen', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa ajatuksen liittyen asumiseen ja kriisitilanteeseen.', optionsFn:words2}
+      {id:'sanat_asuminen', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen asumiseen ja kriisitilanteeseen.', optionsFn:words2}
     ]},
-    {id:'vertailu', title:'Ilmaisia oppaita on jo', html:
-      '<p>Viranomaiset ja j\u00e4rjest\u00f6t julkaisevat varautumisesta ilmaisia oppaita, tarkistuslistoja ja sivustoja. Ne ovat hy\u00f6dyllisi\u00e4. On ep\u00e4ilys, ett\u00e4 n\u00e4m\u00e4 oppaat ja sivustot ovat kuitenkin hajanaisesti internetiss\u00e4 ja eiv\u00e4t kovin helposti saatavilla.</p>'+
+    {id:'vertailu', title:'Ilmaiset oppaat ja suunnitteilla oleva palvelu', html:
+      '<p>Viranomaiset ja j\u00e4rjest\u00f6t julkaisevat varautumisesta ilmaisia oppaita, tarkistuslistoja ja verkkosivuja. Ne ovat hy\u00f6dyllisi\u00e4. Tieto on kuitenkin hajallaan eri paikoissa, ja sen l\u00f6yt\u00e4minen vaatii vaivaa.</p>'+
+      '<p>Vertaa alla olevia tapoja saada tietoa ja vastaa sen j\u00e4lkeen kysymykseen.</p>'+
       '<div class="vk-cmp">'+
         '<div><h3>Ilmaiset oppaat</h3><ul>'+
-          '<li>Etsiv\u00e4n tulee l\u00f6yt\u00e4\u00e4</li>'+
-          '<li>Oletko lukenut tai perehtynyt?</li></ul></div>'+
+          '<li>Tieto on eri sivustoilla ja tiedostoissa</li>'+
+          '<li>Etsit ja valitset olennaisen itse</li>'+
+          '<li>Et saa varmuutta siit\u00e4, oletko perehtynyt riitt\u00e4v\u00e4sti</li></ul></div>'+
         '<div class="vk-new"><h3>Suunnitteilla oleva palvelu</h3><ul>'+
-          '<li>Asiat tuodaan sinulle yhden luukun taktiikalla</li>'+
-          '<li>Verkkokurssi- tai verkkoperehdytyksen muodossa</li>'+
+          '<li>Kaikki tarvittava yhdest\u00e4 paikasta</li>'+
+          '<li>Verkkokurssi tai verkkoperehdytys</li>'+
           '<li>Asiat kerrotaan ymm\u00e4rrett\u00e4v\u00e4sti ja perusteellisesti</li></ul></div>'+
       '</div>', qs:[
       {id:'ero', type:'single', label:'Olisitko valmis maksamaan asiantuntevasta, selke\u00e4st\u00e4 ja sinua varten rakennetusta sis\u00e4ll\u00f6st\u00e4?', options:[
         {v:'kylla', t:'Kyll\u00e4'},{v:'ehka', t:'Ehk\u00e4'},{v:'ei_usko', t:'En usko'},{v:'eos', t:'En osaa sanoa'}]}
     ]},
     {id:'A', title:'Varautumisen aloittamispaketti', card:
-      '<h3>Varautumisen aloittamispaketti</h3><p>Noin parin\u2013kolmen tunnin kokonaisuus varautumisen aloittamiseen. K\u00e4yt l\u00e4pi kotivaran, yhteydenpidon kriisitilanteissa ja kokoontumisen, uutisten ja huhujen arvioinnin, kotitalouden kyberturvan perusteet sek\u00e4 muun muassa hybridivaikuttamisen. Varautumisen aloittamispaketti on kurkistus varautumisen ja kriisien maailmaan, jotta voit kohdata ne paremmin.</p>',
-      qs:[interest('A_kiinnostus'), priceQ('A_hinta', P_A, 'Kertamaksu sis. ALV. Ajattele hintaa, jonka olisit valmis maksamaan oman kriisiturvallisuutesi parantamisesta. Kesto 2\u20133 tuntia verkossa.')]},
+      '<h3>Varautumisen aloittamispaketti</h3><p>Noin 2\u20133 tunnin kokonaisuus, jonka avulla p\u00e4\u00e4set alkuun varautumisessa. K\u00e4yt l\u00e4pi kotivaran sek\u00e4 yhteydenpidon ja kokoontumisen kriisitilanteessa. Opit arvioimaan uutisia ja huhuja, ja saat kotitalouden kyberturvan perusteet. Lis\u00e4ksi tutustut muun muassa hybridivaikuttamiseen.</p><p>Paketti on kurkistus varautumisen ja kriisien maailmaan, jotta osaat kohdata ne paremmin.</p>',
+      qs:[interest('A_kiinnostus'), priceQ('A_hinta', P_A, 'Kertamaksu, hinta sis\u00e4lt\u00e4\u00e4 arvonlis\u00e4veron. Ajattele hintaa, jonka maksaisit oman kriisivalmiutesi parantamisesta. Kesto noin 2\u20133 tuntia verkossa.')]},
     {id:'B', title:'Koti kriisiss\u00e4', card:
-      '<h3>Koti kriisiss\u00e4</h3><p>Aloituspaketin jatko-osa, joka syvent\u00e4\u00e4 valmiutta omaan kotiisi ja kotitalouteesi sopivaksi. Aihe k\u00e4sittelee tarkemmin ja perusteellisemmin kodin suojaamista ja varautumista.</p><p class="vk-muted">Kesto noin kolme tuntia.</p>',
-      qs:[interest('B_kiinnostus'), priceQ('B_hinta', P_B, 'Kertamaksu sis. ALV. Ajattele hintaa, jonka olisit valmis maksamaan oman kotisi kriisivalmiuden ja turvallisuuden parantamisesta. Kesto 2\u20133 tuntia verkossa.')]},
-    {id:'C', title:'Taloyhti\u00f6 kriisiss\u00e4', optional:true, showIf:function(){return S.taloyhtio==='kylla';}, card:
+      '<h3>Koti kriisiss\u00e4</h3><p>Aloituspaketin jatko-osa, joka syvent\u00e4\u00e4 kotisi ja kotitaloutesi valmiutta. Se k\u00e4sittelee tarkemmin ja perusteellisemmin kodin suojaamista ja varautumista kriisitilanteisiin.</p><p class="vk-muted">Kesto noin kolme tuntia.</p>',
+      qs:[interest('B_kiinnostus'), priceQ('B_hinta', P_B, 'Kertamaksu, hinta sis\u00e4lt\u00e4\u00e4 arvonlis\u00e4veron. Ajattele hintaa, jonka maksaisit kotisi kriisivalmiuden ja turvallisuuden parantamisesta. Kesto noin kolme tuntia verkossa.')]},
+    {id:'C', title:'Taloyhti\u00f6 kriisiss\u00e4', optional:true, showIf:function(){ var r=S.rooli||[]; return S.taloyhtio==='kylla' && (r.indexOf('hallitus_jasen')>-1 || r.indexOf('hallitus_pj')>-1 || r.indexOf('isannoitsija')>-1); }, card:
       '<h3>Taloyhti\u00f6 kriisiss\u00e4</h3>'+
       '<p class="vk-muted">Taloyhti\u00f6n vastuuhenkil\u00f6ille. T\u00e4m\u00e4 osio on vapaaehtoinen.</p>'+
       '<p>Taloyhti\u00f6n hallitukselle ja is\u00e4nn\u00f6itsij\u00e4lle tarkoitettu verkkokokonaisuus, jonka avulla taloyhti\u00f6 rakentaa oman kriisitoimintamallinsa.</p>'+
@@ -190,20 +196,20 @@
       '<p><b>Hintaluokka:</b> t\u00e4m\u00e4 on taloyhti\u00f6lle tarkoitettu tuote, joten se kuuluu eri hintaluokkaan kuin kaksi edellist\u00e4 tuotetta. Hinta koskee koko taloyhti\u00f6n lisenssi\u00e4, ei yht\u00e4 henkil\u00f6\u00e4.</p>'+
       '<p class="vk-muted">K\u00e4ytt\u00f6oikeus on voimassa noin kaksi viikkoa.</p>',
       qs:[interest('C_kiinnostus','Kuinka kiinnostava t\u00e4m\u00e4 olisi taloyhti\u00f6llenne?'),
-          priceQ('C_hinta', P_C, 'Kertamaksu sis. ALV. Ajattele hintaa, jonka taloyhti\u00f6nne maksaisi koko lisenssist\u00e4 (enint\u00e4\u00e4n 5 osallistujaa).', 'Mik\u00e4 olisi taloyhti\u00f6llenne sopiva enimm\u00e4ishinta koko lisenssist\u00e4?'),
+          priceQ('C_hinta', P_C, 'Kertamaksu, hinta sis\u00e4lt\u00e4\u00e4 arvonlis\u00e4veron. Ajattele hintaa, jonka taloyhti\u00f6nne maksaisi koko lisenssist\u00e4 (enint\u00e4\u00e4n 5 osallistujaa).', 'Mik\u00e4 olisi taloyhti\u00f6llenne sopiva enimm\u00e4ishinta koko lisenssist\u00e4?'),
           {id:'C_paattaja', type:'single', label:'Kuka taloyhti\u00f6ss\u00e4nne p\u00e4\u00e4tt\u00e4isi t\u00e4llaisesta hankinnasta?', options:[
             {v:'hallitus', t:'Hallitus'},{v:'isannoitsija', t:'Is\u00e4nn\u00f6itsij\u00e4'},{v:'yhtiokokous', t:'Yhti\u00f6kokous'},{v:'eitiedossa', t:'En tied\u00e4'}]}]},
     {id:'sisalto', title:'Millaista sis\u00e4lt\u00f6\u00e4 haluat', qs:[
       {id:'ominaisuudet', type:'multi', min:1, max:5, label:'Mitk\u00e4 asiat olisivat sinulle t\u00e4rkeimpi\u00e4?', help:'Voit valita 1\u20135 vaihtoehtoa.', options:[
-        {v:'video', t:'Videot'},{v:'teksti', t:'Teksti ja kuvat, jotka luen omaan tahtiin'},{v:'tehtavat', t:'Teht\u00e4v\u00e4t, jotka teen itse'},{v:'simulaatio', t:'Harjoitus, jossa valintasi viev\u00e4t tilannetta eri suuntiin'},{v:'suunnitelma', t:'Valmis oma suunnitelma lopputuloksena'},{v:'todistus', t:'Todistus suorituksesta'},{v:'lista', t:'Tulostettava tarkistuslista'}]},
-      {id:'tekeminen', type:'single', label:'Kuinka paljon haluat tehd\u00e4 itse, ja kuinka paljon vain lukea ja katsoa?', options:[
+        {v:'video', t:'Videot'},{v:'teksti', t:'Teksti ja kuvat, joita luen omaan tahtiini'},{v:'tehtavat', t:'Teht\u00e4v\u00e4t, jotka teen itse'},{v:'simulaatio', t:'Harjoitus, jossa valintasi viev\u00e4t tilannetta eri suuntiin'},{v:'suunnitelma', t:'Valmis oma varautumisen suunnitelma lopputuloksena'},{v:'todistus', t:'Todistus suorituksesta'},{v:'lista', t:'Tulostettava tarkistuslista'}]},
+      {id:'tekeminen', type:'single', label:'Kuinka paljon haluat tehd\u00e4 itse ja kuinka paljon vain lukea ja katsoa?', options:[
         {v:'lukeminen', t:'Lukeminen ja katselu riitt\u00e4\u00e4'},{v:'jotain', t:'Mukana muutama teht\u00e4v\u00e4'},{v:'paljon', t:'Paljon tekemist\u00e4 ja harjoituksia'}]},
-      {id:'aika', type:'multi', min:1, label:'Jos voisit valita, niin kuinka kauan yhden verkkotuotteen suorittaminen kest\u00e4isi?', help:'Verkkotuotteiden aiheet voivat olla esimerkiksi koti kriisiss\u00e4, kyberturvallisuus, hybridivaikuttaminen, kodin varautuminen jne. Voit valita useita vaihtoehtoja.', options:[
+      {id:'aika', type:'multi', min:1, label:'Jos voisit valita, kuinka kauan yhden verkkotuotteen suorittamisen tulisi kest\u00e4\u00e4?', help:'Verkkotuotteiden aiheita voivat olla esimerkiksi koti kriisiss\u00e4, kyberturvallisuus, hybridivaikuttaminen ja kodin varautuminen. Voit valita useita vaihtoehtoja.', options:[
         {v:'1h', t:'Noin 1 tunti'},{v:'3h', t:'Noin 3 tuntia'},{v:'5h', t:'Noin 5 tuntia'},{v:'6-8h', t:'Noin 6\u20138 tuntia'},{v:'enemman', t:'Enemm\u00e4n'}]}
     ]},
-    {id:'este', title:'Mik\u00e4 voisi est\u00e4\u00e4', qs:[
-      {id:'este', type:'multi', min:1, max:3, label:'Mik\u00e4 voisi jarruttaa sinua hankkimasta varautumisen oppia verkkotuotteen muodossa?', help:'Voit valita 1\u20133 vaihtoehtoa.', options:[
-        {v:'ei', t:'Mik\u00e4\u00e4n ei ole esteen\u00e4', x:true},{v:'hinta', t:'Hinta'},{v:'aika', t:'Ei aikaa'},{v:'luotto', t:'En luota verkkopalveluun'},{v:'tarve', t:'En n\u00e4e tarvetta'},{v:'ilmainen', t:'Ilmaiset oppaat riitt\u00e4v\u00e4t'},{v:'epaselva', t:'Ei ole selv\u00e4\u00e4, mit\u00e4 saisin'}]}
+    {id:'este', title:'Mahdolliset esteet', qs:[
+      {id:'este', type:'multi', min:1, max:3, label:'Mik\u00e4 voisi jarruttaa sinua hankkimasta varautumisen koulutusta verkkotuotteena?', help:'Voit valita 1\u20133 vaihtoehtoa.', options:[
+        {v:'ei', t:'Mik\u00e4\u00e4n ei ole esteen\u00e4', x:true},{v:'hinta', t:'Hinta'},{v:'aika', t:'Minulla ei ole aikaa'},{v:'luotto', t:'En luota verkossa myyt\u00e4viin palveluihin'},{v:'tarve', t:'En n\u00e4e tarvetta'},{v:'ilmainen', t:'Ilmaiset oppaat riitt\u00e4v\u00e4t'},{v:'epaselva', t:'Ei ole selv\u00e4\u00e4, mit\u00e4 saisin vastineeksi'}]}
     ]},
     {id:'loppu', title:'Viel\u00e4 kaksi kysymyst\u00e4', qs:[
       {id:'ika', type:'single', label:'Ik\u00e4ryhm\u00e4si', options:[
@@ -295,9 +301,17 @@
       head.hidden = true;
       app.innerHTML =
         '<h1>'+esc(TITLE)+'</h1>'+
-        '<p class="vk-lead">Kyselyn tekee FireGroup. Se kest\u00e4\u00e4 noin viisi minuuttia.</p>'+
-        '<p>Tutkimme, kiinnostaako ihmisi\u00e4 uudenlainen tapa varautua kotona ja taloyhti\u00f6ss\u00e4. Tuotekonsepti on suunnitteilla ja t\u00e4ll\u00e4 kyselyll\u00e4 tutkitaan kiinnostusta aiheeseen.</p>'+
-        '<p>Vastaukset tallennetaan nimett\u00f6min\u00e4. S\u00e4hk\u00f6postiosoitetta pyydet\u00e4\u00e4n lopussa vain, jos haluat osallistua arvontaan. Sit\u00e4 ei yhdistet\u00e4 vastauksiisi.</p>'+
+        '<p class="vk-lead">Kyselyn tekee FireGroup. Kyselyn pituus on noin viisi minuuttia.</p>'+
+        '<p>Tutkimme, kiinnostaako ihmisi\u00e4 uudenlainen tapa varautua kotona ja taloyhti\u00f6iss\u00e4. Tuotteet ovat viel\u00e4 suunnitteilla, ja vastauksesi auttavat meit\u00e4 rakentamaan niist\u00e4 sellaisia, joita oikeasti tarvitaan.</p>'+
+        '<h3 style="margin-top:26px">Mist\u00e4 on kyse?</h3>'+
+        '<ol class="vk-pts">'+
+          '<li><b>Varautuminen alkaa kotoa</b>S\u00e4hk\u00f6- tai vesikatko, verkkojen h\u00e4iri\u00f6 tai muu kriisi voi tulla nopeasti. Varautuminen tarkoittaa, ett\u00e4 tied\u00e4t etuk\u00e4teen, mit\u00e4 tehd\u00e4 ja mit\u00e4 kotona kannattaa olla.</li>'+
+          '<li><b>Mit\u00e4 varautumisen tuotteilla tarkoitetaan</b>Tuotteet ovat verkossa teht\u00e4vi\u00e4 kokonaisuuksia, verkkokursseja tai verkkoperehdytyksi\u00e4. Ne tuovat tiedon yhteen paikkaan ja kertovat asiat ymm\u00e4rrett\u00e4v\u00e4sti ja perusteellisesti.</li>'+
+          '<li><b>Kolme tuotetta</b>Varautumisen aloittamispaketti kokoaa perusasiat. Koti kriisiss\u00e4 syvent\u00e4\u00e4 valmiutta omaan kotiin. Taloyhti\u00f6 kriisiss\u00e4 on tarkoitettu taloyhti\u00f6n vastuuhenkil\u00f6ille. Esittelemme ne kyselyss\u00e4 lyhyesti.</li>'+
+          '<li><b>Ilmaista tietoa on, mutta se on hajallaan</b>Viranomaisten oppaat ovat hy\u00f6dyllisi\u00e4. Haluamme selvitt\u00e4\u00e4, kaipaatko niiden lis\u00e4ksi selke\u00e4\u00e4, sinua varten rakennettua kokonaisuutta.</li>'+
+          '<li><b>Vastauksesi ratkaisevat</b>Kysymme kiinnostuksestasi, sopivasta hinnasta ja siit\u00e4, millaista sis\u00e4lt\u00f6\u00e4 haluat. Et osta mit\u00e4\u00e4n, eik\u00e4 vastaaminen sido sinua mihink\u00e4\u00e4n. Vastanneiden kesken arvotaan kahvipaketti ja FireGroupin tarjoama PREOX-sammutuspeite.</li>'+
+        '</ol>'+
+        '<p class="vk-muted">Vastaukset tallennetaan nimett\u00f6min\u00e4. S\u00e4hk\u00f6postiosoitetta pyydet\u00e4\u00e4n lopussa vain, jos haluat osallistua arvontaan, eik\u00e4 sit\u00e4 yhdistet\u00e4 vastauksiisi.</p>'+
         '<div class="vk-nav"><button type="button" class="vk-start">Aloita kysely</button></div>';
       app.querySelector('.vk-start').onclick = function(){ render(next(i)); };
       return;
