@@ -145,12 +145,16 @@
   var STEPS = [
     {id:'intro', intro:true},
     {id:'tausta', title:'Ensin v\u00e4h\u00e4n taustaa', qs:[
+      {id:'ika', type:'single', label:'Ik\u00e4ryhm\u00e4si', options:[
+        {v:'alle18', t:'Alle 18'},{v:'18-29', t:'18\u201329'},{v:'30-44', t:'30\u201344'},{v:'45-59', t:'45\u201359'},{v:'60-74', t:'60\u201374'},{v:'75+', t:'75 tai yli'}]},
       {id:'asumismuoto', type:'single', label:'Asuinmuotosi', options:[
         {v:'omakotitalo', t:'Omakotitalo'},{v:'rivitalo', t:'Rivi- tai paritalo'},{v:'kerrostalo', t:'Kerrostalo'},{v:'muu', t:'Muu'}]},
       {id:'taloyhtio', type:'single', label:'Asutko taloyhti\u00f6ss\u00e4 (asunto-osakeyhti\u00f6 tai vastaava)?', options:[
         {v:'kylla', t:'Kyll\u00e4'},{v:'ei', t:'En'},{v:'eitiedossa', t:'En osaa sanoa'}]},
       {id:'rooli', type:'multi', groupReq:true, label:'Roolisi taloyhti\u00f6ss\u00e4', help:'Valitse vuokralainen tai osakas. Voit lis\u00e4ksi valita teht\u00e4v\u00e4si.', showIf:function(){return S.taloyhtio==='kylla';}, options:[
-        {v:'vuokralainen', t:'Vuokralainen', g:1},{v:'osakas', t:'Osakas', g:1},{v:'hallitus_jasen', t:'Hallituksen j\u00e4sen'},{v:'hallitus_pj', t:'Hallituksen puheenjohtaja'},{v:'isannoitsija', t:'Is\u00e4nn\u00f6itsij\u00e4'}]}
+        {v:'vuokralainen', t:'Vuokralainen', g:1},{v:'osakas', t:'Osakas', g:1},{v:'hallitus_jasen', t:'Hallituksen j\u00e4sen'},{v:'hallitus_pj', t:'Hallituksen puheenjohtaja'},{v:'isannoitsija', t:'Is\u00e4nn\u00f6itsij\u00e4'}]},
+      {id:'ala', type:'single', label:'Ty\u00f6skenteletk\u00f6 turvallisuus-, pelastus- tai varautumisalalla?', options:[
+        {v:'kylla', t:'Kyll\u00e4'},{v:'ei', t:'En'}]}
     ]},
     {id:'nyt', title:'Varautuminen nyt', qs:[
       {id:'lahteet', type:'multi', label:'Mist\u00e4 olet saanut tietoa varautumisesta ja kriisitilanteista?', help:'Valitse kaikki sopivat.', options:[
@@ -210,9 +214,7 @@
       {id:'este', type:'multi', min:1, max:3, label:'Mik\u00e4 voisi jarruttaa sinua hankkimasta varautumisen tietoutta ja oppia verkkotuotteen muodossa?', help:'Voit valita 1\u20133 vaihtoehtoa.', options:[
         {v:'ei', t:'Mik\u00e4\u00e4n ei ole esteen\u00e4', x:true},{v:'hinta', t:'Hinta'},{v:'aika', t:'Minulla ei ole aikaa'},{v:'luotto', t:'En luota verkossa myyt\u00e4viin palveluihin'},{v:'tarve', t:'En n\u00e4e tarvetta'},{v:'ilmainen', t:'Ilmaiset oppaat riitt\u00e4v\u00e4t'},{v:'epaselva', t:'Ei ole selv\u00e4\u00e4, mit\u00e4 saisin vastineeksi'}]}
     ]},
-    {id:'loppu', title:'Viel\u00e4 kaksi kysymyst\u00e4', last:true, qs:[
-      {id:'ika', type:'single', label:'Ik\u00e4ryhm\u00e4si', options:[
-        {v:'18-29', t:'18\u201329'},{v:'30-44', t:'30\u201344'},{v:'45-59', t:'45\u201359'},{v:'60-74', t:'60\u201374'},{v:'75+', t:'75 tai yli'}]},
+    {id:'loppu', title:'Viel\u00e4 yksi kysymys', last:true, qs:[
       {id:'alue', type:'single', label:'Asuinalueesi', options:[
         {v:'uusimaa', t:'Uusimaa'},{v:'muu_etela', t:'Muu Etel\u00e4-Suomi'},{v:'lansi', t:'L\u00e4nsi-Suomi'},{v:'ita', t:'It\u00e4-Suomi'},{v:'pohjoinen', t:'Pohjois-Suomi'}]}
     ]}
@@ -371,6 +373,7 @@
     };
     app.querySelector('.vk-abort').onclick = abort;
     app.querySelector('.vk-next').onclick = function(){
+      if(step.id==='tausta' && S.ika==='alle18'){ minorExit(); return; }
       if(!validate(step)) return;
       if(step.last) submit(); else render(next(i));
     };
@@ -439,20 +442,33 @@
 
   var FG_BLOCK = '<div class="vk-org"><h3>FireGroup</h3><p>FireGroup on lappeenrantalainen palo- ja pelastusturvallisuusalan yritys, joka tarjoaa sammutuspeitteit\u00e4 ja paloturvallisuustuotteita sek\u00e4 konsultointi- ja koulutuspalveluita.</p><p class="vk-muted"><a href="https://firegroup.fi" target="_blank" rel="noopener">firegroup.fi</a> \u00b7 info@firegroup.fi</p></div>';
 
+  function minorExit(){
+    S = {}; ORDER = {}; TOUCHED = false;
+    head.hidden = true;
+    app.innerHTML =
+      '<h2>Kiitos mielenkiinnostasi!</h2>'+
+      '<p class="vk-lead">Kysely on tarkoitettu 18 vuotta t\u00e4ytt\u00e4neille, joten vastauksiasi ei tallenneta.</p>'+
+      FG_BLOCK;
+    root.scrollIntoView({block:'start'});
+  }
+
   function thanks(){
     head.hidden = true;
     app.innerHTML =
       '<h2 class="vk-ok" style="color:var(--green)">Kiitos osallistumisesta!</h2>'+
       '<p class="vk-lead">Vastauksesi on tallennettu nimett\u00f6m\u00e4n\u00e4. Ne auttavat meit\u00e4 p\u00e4\u00e4tt\u00e4m\u00e4\u00e4n, mit\u00e4 kannattaa tehd\u00e4 ja mill\u00e4 hinnalla.</p>'+
       '<div class="vk-raffle" id="vk-raffle">'+
-        '<h3>Haluatko viel\u00e4 osallistua arvontaan?</h3>'+
-        '<p>Arvomme PREOX-sammutuspeitteen ja kahvipaketin. Osallistuminen on vapaaehtoista. Arvonta suoritetaan joulukuussa 2026, ja voittajiin otetaan yhteytt\u00e4 s\u00e4hk\u00f6postitse.</p>'+
+        '<h3>Haluatko viel\u00e4 j\u00e4tt\u00e4\u00e4 s\u00e4hk\u00f6postiosoitteesi?</h3>'+
+        '<p>Voit osallistua PREOX-sammutuspeitteen ja kahvipaketin arvontaan. Arvonta suoritetaan joulukuussa 2026, ja voittajiin otetaan yhteytt\u00e4 s\u00e4hk\u00f6postitse. Halutessasi saat my\u00f6s ilmoituksen, kun palvelu avautuu. Molemmat ovat vapaaehtoisia.</p>'+
         '<label class="vk-lbl" for="vk-email">S\u00e4hk\u00f6postiosoite</label>'+
         '<input type="email" id="vk-email" class="vk-email" autocomplete="email" inputmode="email" maxlength="120">'+
-        '<div class="vk-opts vk-multi"><label class="vk-opt"><input type="checkbox" id="vk-consent"><span>Hyv\u00e4ksyn, ett\u00e4 osoitettani k\u00e4ytet\u00e4\u00e4n vain arvonnan voittajille ilmoittamiseen.</span></label></div>'+
+        '<div class="vk-opts vk-multi">'+
+          '<label class="vk-opt"><input type="checkbox" id="vk-c-draw"><span>Haluan osallistua arvontaan.</span></label>'+
+          '<label class="vk-opt"><input type="checkbox" id="vk-c-notify"><span>Ilmoittakaa minulle, kun palvelu avautuu.</span></label>'+
+        '</div>'+
         '<p class="vk-err vk-rerr" role="alert"></p>'+
-        '<div class="vk-nav"><button type="button" class="vk-send vk-draw">Osallistu arvontaan</button></div>'+
-        '<p class="vk-muted" style="margin-top:14px">S\u00e4hk\u00f6postiosoite tallennetaan erilleen vastauksistasi, eik\u00e4 sit\u00e4 yhdistet\u00e4 niihin. Osoite poistetaan arvonnan j\u00e4lkeen. Rekisterinpit\u00e4j\u00e4: FireGroup, Lappeenranta, info@firegroup.fi.</p>'+
+        '<div class="vk-nav"><button type="button" class="vk-send vk-draw">L\u00e4het\u00e4</button></div>'+
+        '<p class="vk-muted" style="margin-top:14px">K\u00e4yt\u00e4mme osoitetta vain valitsemiisi tarkoituksiin. Osoite tallennetaan erilleen vastauksistasi, eik\u00e4 sit\u00e4 yhdistet\u00e4 niihin. Arvontaa varten annettu osoite poistetaan arvonnan j\u00e4lkeen. Ilmoitusta varten osoite s\u00e4ilytet\u00e4\u00e4n, kunnes palvelu avautuu tai pyyd\u00e4t poistamaan sen osoitteesta info@firegroup.fi. Rekisterinpit\u00e4j\u00e4: FireGroup, Lappeenranta.</p>'+
       '</div>'+
       '<h3 style="margin-top:28px">Kolme asiaa, jotka kannattaa tehd\u00e4 heti</h3>'+
       '<div class="vk-tip"><p><b>Varaa juomavett\u00e4.</b> Ihminen tarvitsee p\u00e4ivitt\u00e4in noin 2 litraa puhdasta juomavett\u00e4, ja lis\u00e4ksi vett\u00e4 tarvitaan ruoanlaittoon ja hygieniaan.</p></div>'+
@@ -463,16 +479,23 @@
     var rerr = box.querySelector('.vk-rerr');
     box.querySelector('.vk-draw').onclick = function(){
       var em = document.getElementById('vk-email').value.trim();
+      var wDraw = document.getElementById('vk-c-draw').checked;
+      var wNotify = document.getElementById('vk-c-notify').checked;
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ rerr.textContent = 'Tarkista s\u00e4hk\u00f6postiosoite.'; return; }
-      if(!document.getElementById('vk-consent').checked){ rerr.textContent = 'Hyv\u00e4ksy ensin osoitteen k\u00e4ytt\u00f6 arvontaa varten.'; return; }
+      if(!wDraw && !wNotify){ rerr.textContent = 'Valitse v\u00e4hint\u00e4\u00e4n yksi vaihtoehto.'; return; }
       var b = box.querySelector('.vk-draw'); b.disabled = true; b.textContent = 'Tallennetaan\u2026';
-      function ready(){ box.innerHTML = '<h3 class="vk-ok" style="color:var(--green)">Olet mukana arvonnassa!</h3><p>Kiitos! Otamme voittajiin yhteytt\u00e4 s\u00e4hk\u00f6postitse joulukuussa 2026.</p>'; }
+      function ready(){
+        var msg = [];
+        if(wDraw) msg.push('Olet mukana arvonnassa, ja voittajiin otetaan yhteytt\u00e4 s\u00e4hk\u00f6postitse joulukuussa 2026.');
+        if(wNotify) msg.push('Ilmoitamme sinulle, kun palvelu avautuu.');
+        box.innerHTML = '<h3 class="vk-ok" style="color:var(--green)">Kiitos!</h3><p>'+msg.join(' ')+'</p>';
+      }
       if(hp.value !== ''){ ready(); return; }
-      if(!ENDPOINT){ try{ console.log('ARVONTA (ei l\u00e4hetetty, ENDPOINT puuttuu)'); }catch(e){} ready(); return; }
-      /* Osoite l\u00e4hetet\u00e4\u00e4n erikseen ilman tunnistetta tai aikaleimaa, jotta sit\u00e4 ei voi yhdist\u00e4\u00e4 vastauksiin. */
+      if(!ENDPOINT){ try{ console.log('SAHKOPOSTI (ei l\u00e4hetetty, ENDPOINT puuttuu)', wDraw, wNotify); }catch(e){} ready(); return; }
+      /* Osoite l\u00e4hetet\u00e4\u00e4n erikseen ilman vastaustunnistetta tai aikaleimaa, jotta sit\u00e4 ei voi yhdist\u00e4\u00e4 vastauksiin. */
       var done = false; function fin(){ if(!done){ done = true; ready(); } }
       var t = setTimeout(fin, 8000);
-      postJson({tyyppi:'arvonta', email: em}).then(function(){ clearTimeout(t); fin(); });
+      postJson({tyyppi:'yhteys', email: em, arvonta: wDraw, ilmoitus: wNotify, lahde: (new URLSearchParams(location.search).get('lahde')||'')}).then(function(){ clearTimeout(t); fin(); });
     };
     root.scrollIntoView({block:'start'});
   }
