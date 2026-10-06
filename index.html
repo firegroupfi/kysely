@@ -52,12 +52,14 @@
 #vk .vk-card{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:22px 22px 8px;margin:0 0 34px}
 #vk .vk-card h3{color:var(--fire);font-size:clamp(24px,4.6vw,32px);line-height:1.2;font-weight:700;margin-bottom:12px}
 #vk .vk-cmp{display:grid;grid-template-columns:1fr;gap:14px;margin:0 0 34px}
-@media(min-width:620px){#vk .vk-cmp{grid-template-columns:1fr 1fr}}
 #vk .vk-cmp>div{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:20px}
 #vk .vk-cmp>div.vk-new{border-color:var(--fire);background:var(--ember)}
-#vk .vk-cmp h3{font-size:18px;color:var(--fire)}
+#vk .vk-cmp h3{font-size:20px;color:var(--fire);margin-bottom:8px}
 #vk .vk-cmp ul{list-style:none}
-#vk .vk-cmp li{padding:9px 0;border-top:1px solid rgba(136,136,136,.35);font-size:15.5px;line-height:1.5}
+#vk .vk-cmp li{position:relative;padding:12px 0 12px 32px;border-top:1px solid rgba(136,136,136,.35);font-size:16px;line-height:1.5}
+#vk .vk-cmp li::before{content:"\2713";position:absolute;left:4px;top:12px;color:var(--green);font-weight:700}
+#vk .vk-hl{color:var(--fire)}
+#vk .vk-raffle{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:22px 22px 10px;margin:26px 0 30px}
 #vk .vk-err{color:var(--coral);font-weight:600;font-size:15px;margin-top:12px}
 #vk .vk-err:empty{display:none}
 #vk .vk-nav{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;align-items:center}
@@ -105,6 +107,7 @@
   var t0 = Date.now();
   var S = {};
   var cur = 0;
+  var TOUCHED = false;
 
   var TITLE = 'Kysely varautumisesta ja kriisitilanteista';
 
@@ -154,33 +157,29 @@
         {v:'viranomaiset', t:'Viranomaisten sivut ja pdf-oppaat'},{v:'uutiset', t:'Uutiset'},{v:'some', t:'Sosiaalinen media'},{v:'tuttavat', t:'Tutut ja naapurit'},{v:'tyopaikka', t:'Ty\u00f6paikka tai oppilaitos'},{v:'muualta', t:'Jostain muualta'},{v:'ei', t:'En ole saanut tietoa', x:true}]},
       {id:'toiminta', type:'single', label:'Oletko toiminut saadun tiedon pohjalta?', options:[
         {v:'tehnyt', t:'Olen hankkinut tai j\u00e4rjest\u00e4nyt jotain konkreettista, kuten kotivaran'},{v:'lukenut', t:'Olen lukenut, mutta en ole tehnyt mit\u00e4\u00e4n'},{v:'ei_lukenut', t:'En ole lukenut tai seurannut asiaa'}]},
-      {id:'kotivara', type:'single', label:'P\u00e4rj\u00e4isik\u00f6 kotitaloutesi kolme vuorokautta, jos s\u00e4hk\u00f6, vesi ja kaupat eiv\u00e4t toimisi?', options:[
+      {id:'kotivara', type:'single', label:'P\u00e4rj\u00e4isik\u00f6 kotitaloutesi juuri nyt kolme vuorokautta, jos s\u00e4hk\u00f6, vesi ja kaupat eiv\u00e4t toimisi?', options:[
         {v:'kylla', t:'Kyll\u00e4, varani riitt\u00e4v\u00e4t'},{v:'osittain', t:'Osittain'},{v:'ei', t:'Ei'},{v:'eitiedossa', t:'En osaa sanoa'}]}
     ]},
     {id:'sanat', title:'Mik\u00e4 sinua kiinnostaa?', qs:[
-      {id:'sanat', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen varautumiseen tai kriisitilanteeseen.', options:WORDS1.map(function(w){return {v:w,t:w};})}
+      {id:'sanat', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen varautumiseen tai kriisitilanteeseen.', labelHtml:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen <span class="vk-hl">varautumiseen tai kriisitilanteeseen</span>.', options:WORDS1.map(function(w){return {v:w,t:w};})}
     ]},
     {id:'sanat2', title:'Asuminen ja kriisitilanne', qs:[
-      {id:'sanat_asuminen', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen asumiseen ja kriisitilanteeseen.', optionsFn:words2}
+      {id:'sanat_asuminen', type:'words', label:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen asumiseen ja kriisitilanteeseen.', labelHtml:'Valitse 1\u20135 sanaa, jotka her\u00e4tt\u00e4v\u00e4t sinussa eniten ajatuksia liittyen <span class="vk-hl">asumiseen ja kriisitilanteeseen</span>.', optionsFn:words2}
     ]},
     {id:'vertailu', title:'Ilmaiset oppaat ja suunnitteilla oleva palvelu', html:
       '<p>Viranomaiset ja j\u00e4rjest\u00f6t julkaisevat varautumisesta ilmaisia oppaita, tarkistuslistoja ja verkkosivuja. Ne ovat hy\u00f6dyllisi\u00e4. Tieto on kuitenkin hajallaan eri paikoissa, ja sen l\u00f6yt\u00e4minen vaatii vaivaa.</p>'+
-      '<p>Vertaa alla olevia tapoja saada tietoa ja vastaa sen j\u00e4lkeen kysymykseen.</p>'+
       '<div class="vk-cmp">'+
-        '<div><h3>Ilmaiset oppaat</h3><ul>'+
-          '<li>Tieto on eri sivustoilla ja tiedostoissa</li>'+
-          '<li>Etsit ja valitset olennaisen itse</li>'+
-          '<li>Et saa varmuutta siit\u00e4, oletko perehtynyt riitt\u00e4v\u00e4sti</li></ul></div>'+
         '<div class="vk-new"><h3>Suunnitteilla oleva palvelu</h3><ul>'+
           '<li>Kaikki tarvittava yhdest\u00e4 paikasta</li>'+
           '<li>Verkkokurssi tai verkkoperehdytys</li>'+
-          '<li>Asiat kerrotaan ymm\u00e4rrett\u00e4v\u00e4sti ja perusteellisesti</li></ul></div>'+
+          '<li>Asiat kerrotaan ymm\u00e4rrett\u00e4v\u00e4sti ja perusteellisesti</li>'+
+          '<li>Asioiden taustat avataan kattavasti</li></ul></div>'+
       '</div>', qs:[
       {id:'ero', type:'single', label:'Olisitko valmis maksamaan asiantuntevasta, selke\u00e4st\u00e4 ja sinua varten rakennetusta sis\u00e4ll\u00f6st\u00e4?', options:[
         {v:'kylla', t:'Kyll\u00e4'},{v:'ehka', t:'Ehk\u00e4'},{v:'ei_usko', t:'En usko'},{v:'eos', t:'En osaa sanoa'}]}
     ]},
     {id:'A', title:'Varautumisen aloittamispaketti', card:
-      '<h3>Varautumisen aloittamispaketti</h3><p>Noin 2\u20133 tunnin kokonaisuus, jonka avulla p\u00e4\u00e4set alkuun varautumisessa. K\u00e4yt l\u00e4pi kotivaran sek\u00e4 yhteydenpidon ja kokoontumisen kriisitilanteessa. Opit arvioimaan uutisia ja huhuja, ja saat kotitalouden kyberturvan perusteet. Lis\u00e4ksi tutustut muun muassa hybridivaikuttamiseen.</p><p>Paketti on kurkistus varautumisen ja kriisien maailmaan, jotta osaat kohdata ne paremmin.</p>',
+      '<h3>Varautumisen aloittamispaketti</h3><p>On muutamien tuntien perehtyminen varautumiseen ja kriisinkestoon. Tutustut ja opit muun muassa kotivaran perusteisiin, yhteydenpitoon kriisitilanteissa, suojautumisen merkitykseen, uutisten ja huhujen arviointiin, kotitalouden kyberturvan perusteisiin sek\u00e4 hybridivaikuttamiseen.</p><p>Varautumisen aloittamispaketti on kurkistus varautumisen ja kriisien maailmaan, jotta voit kohdata ne paremmin.</p>',
       qs:[interest('A_kiinnostus'), priceQ('A_hinta', P_A, 'Kertamaksu, hinta sis\u00e4lt\u00e4\u00e4 arvonlis\u00e4veron. Ajattele hintaa, jonka maksaisit oman kriisivalmiutesi parantamisesta. Kesto noin 2\u20133 tuntia verkossa.')]},
     {id:'B', title:'Koti kriisiss\u00e4', card:
       '<h3>Koti kriisiss\u00e4</h3><p>Aloituspaketin jatko-osa, joka syvent\u00e4\u00e4 kotisi ja kotitaloutesi valmiutta. Se k\u00e4sittelee tarkemmin ja perusteellisemmin kodin suojaamista ja varautumista kriisitilanteisiin.</p><p class="vk-muted">Kesto noin kolme tuntia.</p>',
@@ -208,21 +207,15 @@
         {v:'1h', t:'Noin 1 tunti'},{v:'3h', t:'Noin 3 tuntia'},{v:'5h', t:'Noin 5 tuntia'},{v:'6-8h', t:'Noin 6\u20138 tuntia'},{v:'enemman', t:'Enemm\u00e4n'}]}
     ]},
     {id:'este', title:'Mahdolliset esteet', qs:[
-      {id:'este', type:'multi', min:1, max:3, label:'Mik\u00e4 voisi jarruttaa sinua hankkimasta varautumisen koulutusta verkkotuotteena?', help:'Voit valita 1\u20133 vaihtoehtoa.', options:[
+      {id:'este', type:'multi', min:1, max:3, label:'Mik\u00e4 voisi jarruttaa sinua hankkimasta varautumisen tietoutta ja oppia verkkotuotteen muodossa?', help:'Voit valita 1\u20133 vaihtoehtoa.', options:[
         {v:'ei', t:'Mik\u00e4\u00e4n ei ole esteen\u00e4', x:true},{v:'hinta', t:'Hinta'},{v:'aika', t:'Minulla ei ole aikaa'},{v:'luotto', t:'En luota verkossa myyt\u00e4viin palveluihin'},{v:'tarve', t:'En n\u00e4e tarvetta'},{v:'ilmainen', t:'Ilmaiset oppaat riitt\u00e4v\u00e4t'},{v:'epaselva', t:'Ei ole selv\u00e4\u00e4, mit\u00e4 saisin vastineeksi'}]}
     ]},
-    {id:'loppu', title:'Viel\u00e4 kaksi kysymyst\u00e4', qs:[
+    {id:'loppu', title:'Viel\u00e4 kaksi kysymyst\u00e4', last:true, qs:[
       {id:'ika', type:'single', label:'Ik\u00e4ryhm\u00e4si', options:[
         {v:'18-29', t:'18\u201329'},{v:'30-44', t:'30\u201344'},{v:'45-59', t:'45\u201359'},{v:'60-74', t:'60\u201374'},{v:'75+', t:'75 tai yli'}]},
       {id:'alue', type:'single', label:'Asuinalueesi', options:[
         {v:'uusimaa', t:'Uusimaa'},{v:'muu_etela', t:'Muu Etel\u00e4-Suomi'},{v:'lansi', t:'L\u00e4nsi-Suomi'},{v:'ita', t:'It\u00e4-Suomi'},{v:'pohjoinen', t:'Pohjois-Suomi'}]}
-    ]},
-    {id:'arvonta', title:'Haluatko osallistua arvontaan?', raffle:true, last:true, html:
-      '<p>Vastaajien kesken arvotaan <b>kahvipaketti</b> ja FireGroupin tarjoama <b>PREOX-sammutuspeite</b>. Osallistuminen on vapaaehtoista, eik\u00e4 se vaikuta vastauksiisi. Voittajille ilmoitetaan s\u00e4hk\u00f6postitse.</p>'+
-      '<label class="vk-lbl" for="vk-email">S\u00e4hk\u00f6postiosoite</label>'+
-      '<input type="email" id="vk-email" class="vk-email" autocomplete="email" inputmode="email" maxlength="120">'+
-      '<div class="vk-opts vk-multi"><label class="vk-opt"><input type="checkbox" id="vk-consent"><span>Hyv\u00e4ksyn, ett\u00e4 osoitettani k\u00e4ytet\u00e4\u00e4n vain arvonnan voittajille ilmoittamiseen.</span></label></div>'+
-      '<p class="vk-muted" style="margin-top:14px">S\u00e4hk\u00f6postiosoite tallennetaan erilleen vastauksistasi, eik\u00e4 sit\u00e4 yhdistet\u00e4 niihin. Osoite poistetaan arvonnan j\u00e4lkeen. Rekisterinpit\u00e4j\u00e4: FireGroup, Lappeenranta, info@firegroup.fi.</p>', qs:[]}
+    ]}
   ];
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
@@ -230,7 +223,7 @@
   function visSteps(){ return STEPS.filter(function(s){ return visible(s) && !s.intro; }); }
 
   function qHtml(q){
-    var h = '<fieldset class="vk-q" data-q="'+q.id+'"><legend>'+esc(q.label)+'</legend>';
+    var h = '<fieldset class="vk-q" data-q="'+q.id+'"><legend>'+(q.labelHtml||esc(q.label))+'</legend>';
     if(q.help) h += '<p class="vk-help">'+esc(q.help)+'</p>';
     if(q.type==='single' || q.type==='multi'){
       h += '<div class="vk-opts '+(q.type==='multi'?'vk-multi':'')+'">';
@@ -302,16 +295,18 @@
       app.innerHTML =
         '<h1>'+esc(TITLE)+'</h1>'+
         '<p class="vk-lead">Kyselyn tekee FireGroup. Kyselyn pituus on noin viisi minuuttia.</p>'+
-        '<p>Tutkimme, kiinnostaako ihmisi\u00e4 uudenlainen tapa varautua kotona ja taloyhti\u00f6iss\u00e4. Tuotteet ovat viel\u00e4 suunnitteilla, ja vastauksesi auttavat meit\u00e4 rakentamaan niist\u00e4 sellaisia, joita oikeasti tarvitaan.</p>'+
+        '<p>Tutkimme, kuinka kiinnostuneita ihmiset ovat uudenlaiseen tapaan ajatella varautumista ja kriisist\u00e4 selviytymist\u00e4 kotona sek\u00e4 taloyhti\u00f6iss\u00e4. Tuotteet ovat viel\u00e4 suunnitteilla, ja vastauksesi auttavat meit\u00e4 rakentamaan niist\u00e4 sellaisia, joita oikeasti tarvitaan.</p>'+
         '<h3 style="margin-top:26px">Mist\u00e4 on kyse?</h3>'+
         '<ol class="vk-pts">'+
           '<li><b>Varautuminen alkaa kotoa</b>S\u00e4hk\u00f6- tai vesikatko, verkkojen h\u00e4iri\u00f6 tai muu kriisi voi tulla nopeasti. Varautuminen tarkoittaa, ett\u00e4 tied\u00e4t etuk\u00e4teen, mit\u00e4 tehd\u00e4 ja mit\u00e4 kotona kannattaa olla.</li>'+
           '<li><b>Mit\u00e4 varautumisen tuotteilla tarkoitetaan</b>Tuotteet ovat verkossa teht\u00e4vi\u00e4 kokonaisuuksia, verkkokursseja tai verkkoperehdytyksi\u00e4. Ne tuovat tiedon yhteen paikkaan ja kertovat asiat ymm\u00e4rrett\u00e4v\u00e4sti ja perusteellisesti.</li>'+
           '<li><b>Kolme tuotetta</b>Varautumisen aloittamispaketti kokoaa perusasiat. Koti kriisiss\u00e4 syvent\u00e4\u00e4 valmiutta omaan kotiin. Taloyhti\u00f6 kriisiss\u00e4 on tarkoitettu taloyhti\u00f6n vastuuhenkil\u00f6ille. Esittelemme ne kyselyss\u00e4 lyhyesti.</li>'+
           '<li><b>Ilmaista tietoa on, mutta se on hajallaan</b>Viranomaisten oppaat ovat hy\u00f6dyllisi\u00e4. Haluamme selvitt\u00e4\u00e4, kaipaatko niiden lis\u00e4ksi selke\u00e4\u00e4, sinua varten rakennettua kokonaisuutta.</li>'+
-          '<li><b>Vastauksesi ratkaisevat</b>Kysymme kiinnostuksestasi, sopivasta hinnasta ja siit\u00e4, millaista sis\u00e4lt\u00f6\u00e4 haluat. Et osta mit\u00e4\u00e4n, eik\u00e4 vastaaminen sido sinua mihink\u00e4\u00e4n. Vastanneiden kesken arvotaan kahvipaketti ja FireGroupin tarjoama PREOX-sammutuspeite.</li>'+
+          '<li><b>Vastauksesi ratkaisevat</b>Kysymme kiinnostuksestasi, sopivasta hinnasta ja siit\u00e4, millaista sis\u00e4lt\u00f6\u00e4 haluat. Et osta mit\u00e4\u00e4n, eik\u00e4 vastaaminen sido sinua mihink\u00e4\u00e4n.</li>'+
         '</ol>'+
-        '<p class="vk-muted">Vastaukset tallennetaan nimett\u00f6min\u00e4. S\u00e4hk\u00f6postiosoitetta pyydet\u00e4\u00e4n lopussa vain, jos haluat osallistua arvontaan, eik\u00e4 sit\u00e4 yhdistet\u00e4 vastauksiisi.</p>'+
+        '<p>Vastaukset tallennetaan nimett\u00f6min\u00e4.</p>'+
+        '<h3 style="margin-top:22px">Arvonta</h3>'+
+        '<p>Kyselyn lopussa voit osallistua PREOX-sammutuspeitteen ja kahvipaketin arvontaan j\u00e4tt\u00e4m\u00e4ll\u00e4 s\u00e4hk\u00f6postiosoitteesi. S\u00e4hk\u00f6postia ei voida linkitt\u00e4\u00e4 vastausvaihtoehtoihin. Arvonta suoritetaan joulukuussa 2026, ja voittajiin otetaan yhteytt\u00e4 s\u00e4hk\u00f6postitse palkinnon lunastamiseksi.</p>'+
         '<div class="vk-nav"><button type="button" class="vk-start">Aloita kysely</button></div>';
       app.querySelector('.vk-start').onclick = function(){ render(next(i)); };
       return;
@@ -327,10 +322,7 @@
     step.qs.forEach(function(q){ h += qHtml(q); });
     h += '<div class="vk-nav">';
     if(idx>0) h += '<button type="button" class="vk-ghost vk-back">Takaisin</button>';
-    if(step.raffle){
-      h += '<button type="button" class="vk-next vk-send">Osallistun ja l\u00e4het\u00e4n vastaukset</button>';
-      h += '<button type="button" class="vk-ghost vk-nodraw">L\u00e4het\u00e4 vastaukset ilman arvontaa</button>';
-    } else if(step.last) h += '<button type="button" class="vk-next vk-send">L\u00e4het\u00e4 vastaukset</button>';
+    if(step.last) h += '<button type="button" class="vk-next vk-send">L\u00e4het\u00e4 vastaukset</button>';
     else h += '<button type="button" class="vk-next">Seuraava</button>';
     if(step.optional) h += '<button type="button" class="vk-ghost vk-skip">Ohita t\u00e4m\u00e4 osio</button>';
     h += '<button type="button" class="vk-abort">Keskeyt\u00e4</button>';
@@ -353,6 +345,17 @@
         }
         syncQ(fs, q);
         fs.querySelector('.vk-err').textContent = '';
+        if(q.id==='taloyhtio') TOUCHED = true;
+        if(q.id==='asumismuoto' && !TOUCHED){
+          var dflt = S.asumismuoto==='omakotitalo' ? 'ei' : ((S.asumismuoto==='rivitalo' || S.asumismuoto==='kerrostalo') ? 'kylla' : null);
+          var q2 = step.qs.filter(function(x){ return x.id==='taloyhtio'; })[0];
+          var fs2 = app.querySelector('[data-q="taloyhtio"]');
+          if(dflt && q2 && fs2){
+            fs2.querySelectorAll('input').forEach(function(inp){ inp.checked = (inp.value===dflt); });
+            syncQ(fs2, q2);
+            fs2.querySelector('.vk-err').textContent = '';
+          }
+        }
         refreshCond(step);
       });
     });
@@ -367,21 +370,9 @@
       render(next(i));
     };
     app.querySelector('.vk-abort').onclick = abort;
-    if(step.raffle){
-      var rerr = app.querySelector('.vk-rerr');
-      app.querySelector('.vk-next').onclick = function(){
-        var em = document.getElementById('vk-email').value.trim();
-        var okc = document.getElementById('vk-consent').checked;
-        if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ rerr.textContent = 'Tarkista s\u00e4hk\u00f6postiosoite.'; return; }
-        if(!okc){ rerr.textContent = 'Hyv\u00e4ksy ensin osoitteen k\u00e4ytt\u00f6 arvontaa varten.'; return; }
-        submit(em);
-      };
-      app.querySelector('.vk-nodraw').onclick = function(){ submit(null); };
-      return;
-    }
     app.querySelector('.vk-next').onclick = function(){
       if(!validate(step)) return;
-      if(step.last) submit(null); else render(next(i));
+      if(step.last) submit(); else render(next(i));
     };
   }
 
@@ -410,10 +401,13 @@
     return ok;
   }
 
-  function submit(email){
-    var btns = app.querySelectorAll('button');
-    btns.forEach(function(b){ b.disabled = true; });
-    var main = app.querySelector('.vk-next'); main.textContent = 'L\u00e4hetet\u00e4\u00e4n\u2026';
+  function postJson(obj){
+    return fetch(ENDPOINT, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(obj)}).catch(function(){});
+  }
+
+  function submit(){
+    app.querySelectorAll('button').forEach(function(b){ b.disabled = true; });
+    var main = app.querySelector('.vk-next'); main.textContent = 'Tallennetaan\u2026';
     var rec = {
       id: Math.random().toString(36).slice(2,10) + Date.now().toString(36),
       ts: new Date().toISOString(),
@@ -423,24 +417,16 @@
       vastaukset: S
     };
     var botti = hp.value !== '';
-    var mukana = !!email;
-    function done(){ thanks(mukana); }
-    if(botti){ done(); return; }
-    if(!ENDPOINT){ try{ console.log('VASTAUS (ei l\u00e4hetetty, ENDPOINT puuttuu):', JSON.stringify(rec), 'arvonta:', mukana); }catch(e){} done(); return; }
-    function post(obj){
-      return fetch(ENDPOINT, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(obj)}).catch(function(){});
-    }
+    if(botti){ thanks(); return; }
+    if(!ENDPOINT){ try{ console.log('VASTAUS (ei l\u00e4hetetty, ENDPOINT puuttuu):', JSON.stringify(rec)); }catch(e){} thanks(); return; }
     var finished = false;
-    function fin(){ if(!finished){ finished = true; done(); } }
+    function fin(){ if(!finished){ finished = true; thanks(); } }
     var timer = setTimeout(fin, 8000);
-    var jobs = [post(rec)];
-    /* Arvonta-osoite l\u00e4hetet\u00e4\u00e4n erikseen ilman tunnistetta tai aikaleimaa, jotta sit\u00e4 ei voi yhdist\u00e4\u00e4 vastauksiin. */
-    if(mukana) jobs.push(post({tyyppi:'arvonta', email: email}));
-    Promise.all(jobs).then(function(){ clearTimeout(timer); fin(); });
+    postJson(rec).then(function(){ clearTimeout(timer); fin(); });
   }
 
   function abort(){
-    S = {}; ORDER = {};
+    S = {}; ORDER = {}; TOUCHED = false;
     head.hidden = true;
     app.innerHTML =
       '<h2>Kiitos, ett\u00e4 aloitit kyselyn!</h2>'+
@@ -453,17 +439,41 @@
 
   var FG_BLOCK = '<div class="vk-org"><h3>FireGroup</h3><p>FireGroup on lappeenrantalainen palo- ja pelastusturvallisuusalan yritys, joka tarjoaa sammutuspeitteit\u00e4 ja paloturvallisuustuotteita sek\u00e4 konsultointi- ja koulutuspalveluita.</p><p class="vk-muted"><a href="https://firegroup.fi" target="_blank" rel="noopener">firegroup.fi</a> \u00b7 info@firegroup.fi</p></div>';
 
-  function thanks(mukana){
+  function thanks(){
     head.hidden = true;
     app.innerHTML =
-      '<h2 class="vk-ok" style="color:var(--green)">Kiitos vastauksistasi!</h2>'+
-      '<p class="vk-lead">Vastauksesi on l\u00e4hetetty nimett\u00f6m\u00e4n\u00e4. Ne auttavat meit\u00e4 p\u00e4\u00e4tt\u00e4m\u00e4\u00e4n, mit\u00e4 kannattaa tehd\u00e4 ja mill\u00e4 hinnalla.</p>'+
-      (mukana ? '<p>Olet mukana arvonnassa. Voittajille ilmoitetaan s\u00e4hk\u00f6postitse.</p>' : '')+
+      '<h2 class="vk-ok" style="color:var(--green)">Kiitos osallistumisesta!</h2>'+
+      '<p class="vk-lead">Vastauksesi on tallennettu nimett\u00f6m\u00e4n\u00e4. Ne auttavat meit\u00e4 p\u00e4\u00e4tt\u00e4m\u00e4\u00e4n, mit\u00e4 kannattaa tehd\u00e4 ja mill\u00e4 hinnalla.</p>'+
+      '<div class="vk-raffle" id="vk-raffle">'+
+        '<h3>Haluatko viel\u00e4 osallistua arvontaan?</h3>'+
+        '<p>Arvomme PREOX-sammutuspeitteen ja kahvipaketin. Osallistuminen on vapaaehtoista. Arvonta suoritetaan joulukuussa 2026, ja voittajiin otetaan yhteytt\u00e4 s\u00e4hk\u00f6postitse.</p>'+
+        '<label class="vk-lbl" for="vk-email">S\u00e4hk\u00f6postiosoite</label>'+
+        '<input type="email" id="vk-email" class="vk-email" autocomplete="email" inputmode="email" maxlength="120">'+
+        '<div class="vk-opts vk-multi"><label class="vk-opt"><input type="checkbox" id="vk-consent"><span>Hyv\u00e4ksyn, ett\u00e4 osoitettani k\u00e4ytet\u00e4\u00e4n vain arvonnan voittajille ilmoittamiseen.</span></label></div>'+
+        '<p class="vk-err vk-rerr" role="alert"></p>'+
+        '<div class="vk-nav"><button type="button" class="vk-send vk-draw">Osallistu arvontaan</button></div>'+
+        '<p class="vk-muted" style="margin-top:14px">S\u00e4hk\u00f6postiosoite tallennetaan erilleen vastauksistasi, eik\u00e4 sit\u00e4 yhdistet\u00e4 niihin. Osoite poistetaan arvonnan j\u00e4lkeen. Rekisterinpit\u00e4j\u00e4: FireGroup, Lappeenranta, info@firegroup.fi.</p>'+
+      '</div>'+
       '<h3 style="margin-top:28px">Kolme asiaa, jotka kannattaa tehd\u00e4 heti</h3>'+
       '<div class="vk-tip"><p><b>Varaa juomavett\u00e4.</b> Ihminen tarvitsee p\u00e4ivitt\u00e4in noin 2 litraa puhdasta juomavett\u00e4, ja lis\u00e4ksi vett\u00e4 tarvitaan ruoanlaittoon ja hygieniaan.</p></div>'+
       '<div class="vk-tip"><p><b>Hanki paristoilla toimiva radio ja varaparistot.</b> Vaaratiedote annetaan muun muassa radiossa.</p></div>'+
       '<div class="vk-tip"><p><b>Kokoa kotivara.</b> Pullovett\u00e4, helposti valmistettavaa ruokaa, v\u00e4h\u00e4n k\u00e4teist\u00e4 ja omat l\u00e4\u00e4kkeet. Tavoitteena on p\u00e4rj\u00e4t\u00e4 v\u00e4hint\u00e4\u00e4n 72 tuntia.</p></div>'+
       FG_BLOCK;
+    var box = document.getElementById('vk-raffle');
+    var rerr = box.querySelector('.vk-rerr');
+    box.querySelector('.vk-draw').onclick = function(){
+      var em = document.getElementById('vk-email').value.trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ rerr.textContent = 'Tarkista s\u00e4hk\u00f6postiosoite.'; return; }
+      if(!document.getElementById('vk-consent').checked){ rerr.textContent = 'Hyv\u00e4ksy ensin osoitteen k\u00e4ytt\u00f6 arvontaa varten.'; return; }
+      var b = box.querySelector('.vk-draw'); b.disabled = true; b.textContent = 'Tallennetaan\u2026';
+      function ready(){ box.innerHTML = '<h3 class="vk-ok" style="color:var(--green)">Olet mukana arvonnassa!</h3><p>Kiitos! Otamme voittajiin yhteytt\u00e4 s\u00e4hk\u00f6postitse joulukuussa 2026.</p>'; }
+      if(hp.value !== ''){ ready(); return; }
+      if(!ENDPOINT){ try{ console.log('ARVONTA (ei l\u00e4hetetty, ENDPOINT puuttuu)'); }catch(e){} ready(); return; }
+      /* Osoite l\u00e4hetet\u00e4\u00e4n erikseen ilman tunnistetta tai aikaleimaa, jotta sit\u00e4 ei voi yhdist\u00e4\u00e4 vastauksiin. */
+      var done = false; function fin(){ if(!done){ done = true; ready(); } }
+      var t = setTimeout(fin, 8000);
+      postJson({tyyppi:'arvonta', email: em}).then(function(){ clearTimeout(t); fin(); });
+    };
     root.scrollIntoView({block:'start'});
   }
 
